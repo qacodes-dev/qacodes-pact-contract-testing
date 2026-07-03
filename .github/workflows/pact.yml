@@ -1,0 +1,108 @@
+name: Pact Contract Testing
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# The whole consumer → publish → verify → can-i-deploy lifecycle runs in ONE
+# job so the dockerised Pact Broker (a service container, scoped to the job) is
+# shared across every step. This keeps CI hermetic — no external broker account
+# required. Teams with a real broker can instead set PACT_BROKER_BASE_URL /
+# PACT_BROKER_TOKEN as repo secrets and point the steps at PactFlow (see README).
+jobs:
+  contract-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      # Storage for the broker.
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: pact
+          POSTGRES_PASSWORD: pact
+          POSTGRES_DB: pact
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pact"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      # The Pact Broker itself, reachable at http://localhost:9292. Left open
+      # (no basic auth) so CI needs no credentials; the token below is a dummy.
+      pact-broker:
+        image: pactfoundation/pact-broker:latest
+        env:
+          PACT_BROKER_DATABASE_URL: postgres://pact:pact@postgres/pact
+          PACT_BROKER_DATABASE_CONNECT_MAX_RETRIES: "10"
+          PACT_BROKER_BASE_URL: http://localhost:9292
+        ports:
+          - 9292:9292
+
+    env:
+      PACT_BROKER_BASE_URL: http://localhost:9292
+      PACT_BROKER_TOKEN: ci-open-broker-not-a-secret
+      CONSUMER_VERSION: ${{ github.sha }}
+      PROVIDER_VERSION: ${{ github.sha }}
+      PACT_BRANCH: ${{ github.ref_name }}
+      CI: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for the Pact Broker to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9292/diagnostic/status/heartbeat > /dev/null; then
+              echo "Broker is up"; exit 0
+            fi
+            echo "Waiting for broker... ($i)"; sleep 3
+          done
+          echo "Broker did not become ready in time"; exit 1
+
+      - name: Ensure the production environment exists
+        run: npx pact-broker create-environment --name production --production || true
+
+      # --- Consumer: generate the contract, then publish it to the broker ---
+      - name: Consumer contract tests (generate pacts)
+        run: npm run test:consumer
+
+      - name: Publish pacts to the broker
+        run: npm run pact:publish
+
+      # --- Provider: verify the published contract, publish results back ---
+      - name: Verify provider against published pacts
+        run: npm run test:provider
+
+      # --- Deployment gate: is this provider version safe for production? ---
+      # We record the consumer as deployed to production first, so can-i-deploy
+      # has a partner in the target environment to check compatibility against.
+      - name: Record consumer deployment to production
+        run: npx pact-broker record-deployment --pacticipant OrderUi --version "$CONSUMER_VERSION" --environment production
+
+      - name: can-i-deploy OrdersApi to production
+        run: npx pact-broker can-i-deploy --pacticipant OrdersApi --version "$PROVIDER_VERSION" --to-environment production
+
+      - name: Record provider deployment to production
+        run: npx pact-broker record-deployment --pacticipant OrdersApi --version "$PROVIDER_VERSION" --environment production
+
+      # Always upload the generated contracts and mock-server logs for triage.
+      - name: Upload pact artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pact-artifacts
+          path: |
+            pacts/*.json
+            logs/
+          if-no-files-found: ignore

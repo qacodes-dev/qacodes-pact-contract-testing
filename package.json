@@ -1,0 +1,35 @@
+{
+  "name": "qacodes-pact-contract-testing",
+  "version": "1.0.0",
+  "description": "Consumer-driven contract testing with Pact and TypeScript — an Order UI consumer and an Orders API provider wired through a Pact Broker.",
+  "license": "MIT",
+  "author": "qa.codes",
+  "private": true,
+  "engines": {
+    "node": ">=18",
+    "npm": ">=9"
+  },
+  "scripts": {
+    "test:consumer": "jest --config jest.consumer.config.js --runInBand",
+    "test:provider": "jest --config jest.provider.config.js --runInBand",
+    "pact:publish": "ts-node scripts/publish-pacts.ts",
+    "can-i-deploy": "pact-broker can-i-deploy --pacticipant OrdersApi --version $PROVIDER_VERSION --to-environment production",
+    "record-deployment": "pact-broker record-deployment --pacticipant OrdersApi --version $PROVIDER_VERSION --environment production",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@pact-foundation/pact": "^12.5.2",
+    "@pact-foundation/pact-cli": "^16.0.4",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.14.9",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  }
+}
