@@ -162,8 +162,10 @@ across all steps — CI is hermetic and needs no external account:
    `npm run pact:publish` uploads it (versioned with `github.sha`, tagged with the branch).
 2. **Provider** — `npm run test:provider` verifies the published contract against
    the real API and publishes results back to the broker.
-3. **Gate** — `can-i-deploy` confirms `OrdersApi@sha` is compatible with the
-   consumer already recorded in `production`; a `record-deployment` step then logs the release.
+3. **Gate (push to `main` only)** — `can-i-deploy` confirms `OrdersApi@sha` is
+   compatible with the consumer already recorded in `production`; a
+   `record-deployment` step then logs the release. Pull requests run steps 1–2
+   to validate contracts but never record a production deployment.
 4. Generated pacts and mock-server logs are uploaded as a build artifact with `if: always()`.
 
 **Using PactFlow instead of the dockerised broker:** set `PACT_BROKER_BASE_URL`

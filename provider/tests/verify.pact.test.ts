@@ -68,8 +68,15 @@ describe('Pact Verification: OrdersApi honours its consumer contracts', () => {
           providerVersionBranch: process.env.PACT_BRANCH,
           // Publish results back to the broker only from CI.
           publishVerificationResult: process.env.CI === 'true',
-          // Verify the latest contract from each consumer's main branch.
-          consumerVersionSelectors: [{ mainBranch: true }],
+          // Verify the contract published for the branch this build is running.
+          // On CI, PACT_BRANCH is the branch we just published the pact under,
+          // so this matches deterministically for both push and PR builds
+          // (a `mainBranch: true` selector only resolves on the main branch).
+          consumerVersionSelectors: [
+            process.env.PACT_BRANCH
+              ? { branch: process.env.PACT_BRANCH }
+              : { mainBranch: true },
+          ],
         }
       : {
           pactUrls: localPactFiles(),

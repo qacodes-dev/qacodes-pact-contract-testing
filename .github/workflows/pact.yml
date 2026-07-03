@@ -46,7 +46,8 @@ jobs:
       PACT_BROKER_TOKEN: ci-open-broker-not-a-secret
       CONSUMER_VERSION: ${{ github.sha }}
       PROVIDER_VERSION: ${{ github.sha }}
-      PACT_BRANCH: ${{ github.ref_name }}
+      # On a PR, ref_name is "<n>/merge"; head_ref is the real source branch.
+      PACT_BRANCH: ${{ github.head_ref || github.ref_name }}
       CI: "true"
 
     steps:
@@ -71,6 +72,7 @@ jobs:
           echo "Broker did not become ready in time"; exit 1
 
       - name: Ensure the production environment exists
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: npx pact-broker create-environment --name production --production || true
 
       # --- Consumer: generate the contract, then publish it to the broker ---
@@ -85,15 +87,20 @@ jobs:
         run: npm run test:provider
 
       # --- Deployment gate: is this provider version safe for production? ---
-      # We record the consumer as deployed to production first, so can-i-deploy
-      # has a partner in the target environment to check compatibility against.
+      # Only on pushes to main — PRs validate contracts but must not record a
+      # production deployment. We record the consumer as deployed to production
+      # first, so can-i-deploy has a partner in the target environment to check
+      # compatibility against.
       - name: Record consumer deployment to production
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: npx pact-broker record-deployment --pacticipant OrderUi --version "$CONSUMER_VERSION" --environment production
 
       - name: can-i-deploy OrdersApi to production
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: npx pact-broker can-i-deploy --pacticipant OrdersApi --version "$PROVIDER_VERSION" --to-environment production
 
       - name: Record provider deployment to production
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: npx pact-broker record-deployment --pacticipant OrdersApi --version "$PROVIDER_VERSION" --environment production
 
       # Always upload the generated contracts and mock-server logs for triage.
