@@ -25,9 +25,9 @@
     "@pact-foundation/pact": "^12.5.2",
     "@pact-foundation/pact-cli": "^18.1.1",
     "@types/express": "^4.17.21",
-    "@types/jest": "^29.5.12",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.14.9",
-    "jest": "^29.7.0",
+    "jest": "^30.4.2",
     "ts-jest": "^29.2.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.3"
