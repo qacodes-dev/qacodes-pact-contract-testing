@@ -1,6 +1,6 @@
 # Pact Contract Testing — Order UI ⇄ Orders API
 
-[![Pact Contract Testing](https://github.com/qacodes-dev/qacodes-pact-contract-testing/actions/workflows/pact.yml/badge.svg)](https://github.com/qacodes-dev/qacodes-pact-contract-testing/actions/workflows/pact.yml)
+[![Pact Contract Testing](https://github.com/qacodes-dev/qacodes-pact-contract-testing/actions/workflows/pact.yml/badge.svg?branch=main)](https://github.com/qacodes-dev/qacodes-pact-contract-testing/actions/workflows/pact.yml?query=branch%3Amain)
 
 A production-style **consumer-driven contract testing** setup with
 [Pact](https://pact.io) and TypeScript. It models two independently deployed
