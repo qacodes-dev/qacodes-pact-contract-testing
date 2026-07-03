@@ -173,6 +173,11 @@ secrets — publishing happens from CI only, so the broker reflects verified bui
 
 ---
 
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the local workflow, how to add or
+change an interaction, and what to put in the *Contract impact* section of a PR.
+
 ## License
 
 [MIT](./LICENSE) © qa.codes
