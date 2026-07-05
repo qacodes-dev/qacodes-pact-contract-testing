@@ -9,7 +9,7 @@ changes are much easier to review than large ones.
 
 - Keep interactions **small** — one request/response scenario each — so a failed
   verification points at exactly one thing.
-- Prefer **matchers** (`like`, `eachLike`, `term`, `integer`) over literal values
+- Prefer **matchers** (`like`, `eachLike`, `regex`, `integer`) over literal values
   so contracts assert shape and type, not incidental data.
 - Every interaction declares a **provider state**, and every provider state has a
   matching handler that seeds *exactly* that precondition and resets between runs.

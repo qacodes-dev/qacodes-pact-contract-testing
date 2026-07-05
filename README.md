@@ -122,7 +122,7 @@ scripts/publish-pacts.ts                      Publishes pact files to the broker
 ## The interactions
 
 The consumer declares three small, single-purpose interactions, each with a
-**provider state** and **flexible matchers** (`like`, `eachLike`, `term`,
+**provider state** and **flexible matchers** (`like`, `eachLike`, `regex`,
 `integer`) so the contract asserts shape and type rather than incidental data:
 
 | Provider state | Consumer call | Expected response |

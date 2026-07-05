@@ -22,7 +22,7 @@
     "express": "^5.2.1"
   },
   "devDependencies": {
-    "@pact-foundation/pact": "^12.5.2",
+    "@pact-foundation/pact": "^17.0.1",
     "@pact-foundation/pact-cli": "^18.1.1",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
